@@ -1,0 +1,1 @@
+tempoMedioChegada : 20
