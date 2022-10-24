@@ -9,6 +9,7 @@
 
 
 void lerConfiguracao();
+void definirVariaveis(char param[30], int value);
 void escreverOutput();
 
 #endif //SIMULADOR_DE_UMA_DISCOTECA_HEADER_H

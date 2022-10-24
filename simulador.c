@@ -1,95 +1,118 @@
 // Declaraçao das variaveis globais
 #include "header.h"
 
-int tempoMedioChegada,
-    tempoAteUnidadesSaturadas,
-    tempoEsperaLocalIsolamento,
-    tempoMedioTestesConvencionais,
-    tempoMeddioTestesRapidos,
-    numEstacoesTeste,
-    numEspacosIsolamentoEmEstacao,
-    inicioDeSimulacao,
-    tempoDeSimulacao;
+int numPistasNaDiscoteca,
+    lotacaoMaxLocalA,
+    lotacaoMaxLocalB,
+    lotacaoMaxLocalC,
+    lotacaoMaxLocalD,
+    lotacaoMaxLocalE,
+    lotacaoMaxLocalF,
+    inicioSimulacao,
+    fimSimulacao,
+    tempoMedioNovoUser,
+    primeiroLocal;
 
-// Funçao responsavel por ler o ficheiro de configuracao
+// Função responsável por ler o ficheiro de configuracao
 
 void lerConfiguracao()
 {
     FILE* config_file;
 
-    config_file = fopen("../simulation_config.txt", "r"); //r - para ler   //a - escrever, se nao tiver ficheiro, cria-o
+    config_file = fopen("../simulation_config.txt", "r");
 
     if(config_file != NULL){
 
-        char line[50],
-            param[50];
+        char line[30],
+            param[30];
         int value;
 
         while(fgets(line, sizeof(line), config_file) != NULL){
 
             sscanf(line, "%s : %d", param , &value);
 
-            if(strcmp(param, "tempoMedioChegada") == 0){
-                tempoMedioChegada = value;
-            }
+            definirVariaveis(param, value);
 
-            if(strcmp(param, "tempoAteUnidadesSaturadas") == 0) {
-
-                tempoAteUnidadesSaturadas = value;
-            }
-
-            if(strcmp(param, "tempoEsperaLocalIsolamento") == 0) {
-                tempoEsperaLocalIsolamento = value;
-            }
-
-            if(strcmp(param, "tempoMedioTestesConvencionais") == 0) {
-
-                tempoMedioTestesConvencionais = value;
-            }
-
-            if(strcmp(param, "tempoMeddioTestesRapidos") == 0) {
-
-                tempoMeddioTestesRapidos = value;
-            }
-
-            if(strcmp(param, "numEstacoesTeste") == 0) {
-
-                numEstacoesTeste = value;
-            }
-
-            if(strcmp(param, "numEspacosIsolamentoEmEstacao") == 0) {
-
-                numEspacosIsolamentoEmEstacao = value;
-            }
-
-            if(strcmp(param, "inicioDeSimulacao") == 0) {
-
-                inicioDeSimulacao = value;
-            }
-
-            if(strcmp(param, "tempoDeSimulacao") == 0) {
-
-                tempoDeSimulacao = value;
-            }
         }
     } else {
         printf("Failure opening file. Try again! \n");
     }
+
     fclose(config_file);
+
+}
+
+void definirVariaveis(char param[30], int value) {
+
+    if(strcmp(param, "numPistasNaDiscoteca") == 0){
+
+        numPistasNaDiscoteca = value;
+    }
+
+    if(strcmp(param, "lotacaoMaxLocalA") == 0) {
+
+        lotacaoMaxLocalA = value;
+    }
+
+    if(strcmp(param, "lotacaoMaxLocalB") == 0) {
+        lotacaoMaxLocalB = value;
+    }
+
+    if(strcmp(param, "lotacaoMaxLocalC") == 0) {
+
+        lotacaoMaxLocalC = value;
+    }
+
+    if(strcmp(param, "lotacaoMaxLocalD") == 0) {
+
+        lotacaoMaxLocalD = value;
+    }
+
+    if(strcmp(param, "lotacaoMaxLocalE") == 0) {
+
+        lotacaoMaxLocalE = value;
+    }
+
+    if(strcmp(param, "lotacaoMaxLocalF") == 0) {
+
+        lotacaoMaxLocalF = value;
+    }
+
+    if(strcmp(param, "inicioSimulacao") == 0) {
+
+        inicioSimulacao = value;
+    }
+
+    if(strcmp(param, "fimSimulacao") == 0) {
+
+        fimSimulacao = value;
+    }
+
+    if(strcmp(param, "tempoMedioNovoUser") == 0) {
+
+        tempoMedioNovoUser = value;
+    }
+
+    if(strcmp(param, "primeiroLocal") == 0) {
+
+        primeiroLocal = value;
+    }
 
 }
 
 void main()
 {
     lerConfiguracao();
-    printf("Tempo de Medio de Chegada: %d\n",tempoMedioChegada);
-    printf("Tempo ate as Unidades ficarem saturadas: %d\n",tempoAteUnidadesSaturadas);
-    printf("Tempo de esperar no local de isolamento: %d\n",tempoEsperaLocalIsolamento);
-    printf("Tempo medio dos testes convencionais: %d\n",tempoMedioTestesConvencionais);
-    printf("Tempo medio dos testes rapidos: %d\n",tempoMeddioTestesRapidos);
-    printf("Numero de estações de teste: %d\n",numEstacoesTeste);
-    printf("Numero de espaçoes de isolamento na estacao: %d\n",numEspacosIsolamentoEmEstacao);
-    printf("Inicio da simulacao: %d\n",inicioDeSimulacao);
-    printf("Tempo da simulacao: %d\n",tempoDeSimulacao);
+    printf("Numero de locais na discoteca: %d\n",numPistasNaDiscoteca);
+    printf("Lotacao maxima do local A: %d\n",lotacaoMaxLocalA);
+    printf("Lotacao maxima do local B: %d\n",lotacaoMaxLocalB);
+    printf("Lotacao maxima do local C: %d\n",lotacaoMaxLocalC);
+    printf("Lotacao maxima do local D: %d\n",lotacaoMaxLocalD);
+    printf("Lotacao maxima do local E: %d\n",lotacaoMaxLocalE);
+    printf("Lotacao maxima do local F: %d\n",lotacaoMaxLocalF);
+    printf("Inicio da simulacao: %d\n",inicioSimulacao);
+    printf("Fim da simulacao: %d\n",fimSimulacao);
+    printf("Tempo medio para a entrada de um novo user na simulacao: %d\n",tempoMedioNovoUser);
+    printf("Primeiro local a ser acedido pelos users: %d\n",primeiroLocal);
 }
 

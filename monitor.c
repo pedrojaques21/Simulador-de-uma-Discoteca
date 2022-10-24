@@ -3,7 +3,7 @@
 void escreverOutput(){
     FILE* output_file;
 
-    output_file = fopen("../output.txt", "a");
+    output_file = fopen("../output_logs.txt", "a");
 
     if(output_file == NULL){
 
@@ -11,17 +11,21 @@ void escreverOutput(){
     }
     else{
 
-        fprintf(output_file, "-------- START -----\n");
-        fprintf(output_file, "tempoMedioChegada: 10\n");
-        fprintf(output_file, "tempoAteUnidadesSaturadas: 60\n");
-        fprintf(output_file, "tempoEsperaLocalIsolamento: 20\n");
-        fprintf(output_file, "tempoMedioTestesConvencionais: 4\n");
-        fprintf(output_file, "tempoMeddioTestesRapidos: 2\n");
-        fprintf(output_file, "numEstacoesTeste: 2\n");
-        fprintf(output_file, "numEspacosIsolamentoEmEstacao: 20\n");
-        fprintf(output_file, "inicioDeSimulação: 1\n");
-        fprintf(output_file, "tempoDeSimulação: 15\n");
-        fprintf(output_file, "--------- END ------\n");
+        fprintf(output_file, "----------------- START ------------------\n");
+        fprintf(output_file, "001 - 00:00:00 - Utilizador chegou à fila.\n");
+        fprintf(output_file, "001 - 00:01:00 - Utilizador entrou na zona 1.\n");
+        fprintf(output_file, "002 - 00:05:00 - Utilizador chegou à fila.\n");
+        fprintf(output_file, "003 - 00:05:00 - Utilizador chegou à fila.\n");
+        fprintf(output_file, "004 - 00:05:00 - Utilizador chegou à fila.\n");
+        fprintf(output_file, "002 - 00:06:00 - Utilizador entrou na zona 1.\n");
+        fprintf(output_file, "003 - 00:06:00 - Utilizador entrou na zona 1.\n");
+        fprintf(output_file, "004 - 00:06:00 - Utilizador entrou na zona 1.\n");
+        fprintf(output_file, "001 - 00:10:00 - Utilizador mudou para a zona 3.\n");
+        fprintf(output_file, "005 - 00:12:00 - Utilizador chegou à fila.\n");
+        fprintf(output_file, "003 - 02:34:12 - Utilizador mudou para a zona 4.\n");
+        fprintf(output_file, "002 - 03:50:00 - Utilizador mudou para a zona 6.\n");
+        fprintf(output_file, "002 - 04:00:00 - Utilizador saiu da discoteca.\n");
+        fprintf(output_file, "------------------ END -------------------\n");
         fprintf(output_file, " \n");
     }
 
@@ -30,6 +34,6 @@ void escreverOutput(){
 
 void main(){
     escreverOutput();
-    printf("The file output.txt was created!\n");
+    printf("The file output_logs.txt was created!\n");
 }
 
