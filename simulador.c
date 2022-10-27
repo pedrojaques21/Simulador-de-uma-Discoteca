@@ -23,8 +23,8 @@ void lerConfiguracao()
 
     if(config_file != NULL){
 
-        char line[30],
-            param[30];
+        char line[50],
+            param[50];
         int value;
 
         while(fgets(line, sizeof(line), config_file) != NULL){
@@ -42,7 +42,7 @@ void lerConfiguracao()
 
 }
 
-void definirVariaveis(char param[30], int value) {
+void definirVariaveis(char param[50], int value) {
 
     if(strcmp(param, "numPistasNaDiscoteca") == 0){
 
