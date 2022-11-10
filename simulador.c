@@ -7,19 +7,50 @@ char mensagem [50];
 int sockfd = 0;
 
 //Inicializacao de structs globais:
-struct dadosConfiguracaoSimulacao dadosSimulacao;
+struct dadosConfiguracaoSimulacao dados_simulacao;
 struct discoteca discoteca;
-struct zonaDiscoteca[];
-struct pessoa PessoasT[30];            //30 pessoas
+struct zonaDiscoteca zona_discoteca[];
+struct pessoa pessoas_t[30];
 
 //Semaforos:
-sem_t TrincoInformacaoEnviar;//MUDAR O NOME
+sem_t semaforo_enviar_informacao;
 
 //Tarefas:
-pthread_t tIdCentrosTeste[2];			//Array com o id das tarefas correspondentes aos centros de teste
+pthread_t t_id_discoteca;
 pthread_t tIdPessoas[30];                        //Array com o id das tarefas correspondentes as pessoas
 
+void escreverSimulacao (char texto[]){
 
+    FILE* ficheiroApontador; 									//Cria um apontador para um ficheiro
+    ficheiroApontador = fopen("DadosDaSimulacao.txt","a"); 						//Abre o ficheiro. "a" -> acrescenta texto
+    if(ficheiroApontador == NULL){ 									//Verifica se o ficheiro existe
+        printf ("Erro ao abrir o ficheiro ");
+    }
+    else{
+        fprintf(ficheiroApontador, "%s", texto); 						//Coloca no ficheiro o que foi passado como argumento
+    }
+}
+
+void enviarInformacao(char *ficheiroApontador, int sockfd){
+
+    sem_wait(&semaforo_enviar_informacao);        //Coloca o semaforo em espera para mais nenhum processo poder aceder
+
+    char buffer[MAXLINE]; 						                       // criar buffer
+    int tamanho_informacao = 0;   									//tamanho buffer
+
+    if( strcpy( buffer, ficheiroApontador ) != 0 ){ 							//Se houver mensagem
+        tamanho_informacao = strlen( buffer ) + 1;  							// Adicionar um espaco para fazer disto uma string
+        if( write( sockfd, buffer, tamanho_informacao ) != tamanho_informacao ){ 				// verifica se o tamanho do buffer e diferente que o tamanho da mensagem
+            perror("====== Erro ao enviar os dados! ====== \n"); 			// Produz uma mensagem de erro personalizada, em vez do erro padrao
+        }
+        else{
+            printf ( "Mensagem Enviada! \n" );
+        }
+    }
+
+    usleep(2000);
+    sem_post(&semaforo_enviar_informacao); 								//Abre o trinco -> se algum processo quiser entrar pode
+}
 
 // Função responsável por ler o ficheiro de configuracao
 
@@ -32,7 +63,7 @@ void lerConfiguracao()
     if(configuracao_simulacao != NULL){
 
         char linha[50],
-            parametroetro[50];
+            parametro[50];
         int valor;
 
         while(fgets(linha, sizeof(linha), configuracao_simulacao) != NULL){
@@ -54,56 +85,56 @@ void definirVariaveis(char parametro[50], int valor) {
 
     if(strcmp(parametro, "numPistasNaDiscoteca") == 0){
 
-        numPistasNaDiscoteca = valor;
+        dados_simulacao.numPistasNaDiscoteca = valor;
     }
 
     if(strcmp(parametro, "lotacaoMaxLocalA") == 0) {
 
-        lotacaoMaxLocalA = valor;
+        dados_simulacao.lotacaoMaxLocalA = valor;
     }
 
     if(strcmp(parametro, "lotacaoMaxLocalB") == 0) {
-        lotacaoMaxLocalB = valor;
+        dados_simulacao.lotacaoMaxLocalB = valor;
     }
 
     if(strcmp(parametro, "lotacaoMaxLocalC") == 0) {
 
-        lotacaoMaxLocalC = valor;
+        dados_simulacao.lotacaoMaxLocalC = valor;
     }
 
     if(strcmp(parametro, "lotacaoMaxLocalD") == 0) {
 
-        lotacaoMaxLocalD = valor;
+        dados_simulacao.lotacaoMaxLocalD = valor;
     }
 
     if(strcmp(parametro, "lotacaoMaxLocalE") == 0) {
 
-        lotacaoMaxLocalE = valor;
+        dados_simulacao.lotacaoMaxLocalE = valor;
     }
 
     if(strcmp(parametro, "lotacaoMaxLocalF") == 0) {
 
-        lotacaoMaxLocalF = valor;
+        dados_simulacao.lotacaoMaxLocalF = valor;
     }
 
     if(strcmp(parametro, "inicioSimulacao") == 0) {
 
-        inicioSimulacao = valor;
+        dados_simulacao.inicioSimulacao = valor;
     }
 
     if(strcmp(parametro, "fimSimulacao") == 0) {
 
-        fimSimulacao = valor;
+        dados_simulacao.fimSimulacao = valor;
     }
 
     if(strcmp(parametro, "tempoMedioNovoUser") == 0) {
 
-        tempoMedioNovoUser = valor;
+        dados_simulacao.tempoMedioNovoUser = valor;
     }
 
     if(strcmp(parametro, "primeiroLocal") == 0) {
 
-        primeiroLocal = valor;
+        dados_simulacao.primeiroLocal = valor;
     }
 
 }
@@ -144,75 +175,36 @@ int criarSocket(){
 
 void definirValores(){
 
-    sem_init(&TrincoInformacaoEnviar,0,1);
+    sem_init(&semaforo_enviar_informacao,0,1);
 
     lerConfiguracao();
     printf("Leitura da configuracao inicial completa! \n");
 
-    criarCentroTestagem(0);//Por alterar!!
-    criarCentroTestagem(1);
+    criarDiscoteca();//colocar o numero de zonas como parametros!!!
 }
 
 void simular(int sockfd){
 
     definirValores();
-    InformacaoEnviar ("**** A comecar simular **** \n", sockfd);
 
-    // printf("Acabei de imprimir o Inicio \n");
+    enviarInformacao ("**** A comecar simular **** \n", sockfd);
 
     int zero = 0;
-    //Era fixe depois mudar isto para A e B e assim estes ficavam os nomes dos centros
-    int um = 1;
 
+    pthread_create (&t_id_discoteca[0], NULL, discoteca, &zero); // Criacao de uma tarefa. Esta tarefa vai criar o primeiro centro de testagem
 
-    // ************** Criacao dos dois centros de testagem **************************
+    printf("Acabei de criar a tarefa da discoteca \n");
 
-    pthread_create (&tIdCentrosTeste[0], NULL, centroTeste, &zero); // Criacao de uma tarefa. Esta tarefa vai criar o primeiro centro de testagem
-    pthread_create (&tIdCentrosTeste[1], NULL, centroTeste, &um);  //Criacao de outra tarefa. Esta tarefa vai criar o segundo centro de testagem
+    pthread_join(t_id_discoteca[0],NULL);
 
-    printf("Acabei de cirar as tarefas dos centros de Teste \n");
+    enviarInformacao("**** simular - Discoteca **** \n", sockfd);
+    enviarInformacao("1", sockfd);
 
-    pthread_join(tIdCentrosTeste[0],NULL);
-    pthread_join(tIdCentrosTeste[1],NULL);
-
-    InformacaoEnviar("**** simular - Rastreamento Covid-19 **** \n",sockfd);
-    InformacaoEnviar("1",sockfd);
-    // ===============================================================================
-    // ===============================================================================
-
-
-    // ************** Criacao das 30 pessoas ***************************************
-    /*
-    pthread_create (&tIdPessoas[0], NULL, Pessoa, &zero); // Criacao de uma tarefa. Esta tarefa vai criar a primeira pessoa
-    pthread_create (&tIdPessoas[1], NULL, Pessoa, &um);   //Criacao de outra tarefa. Esta tarefa vai criar a primeira pessoa
-
-    printf("Acabei de cirar as tarefas das Pessoas \n");
-
-    pthread_join(tIdPessoas[0],NULL);
-    pthread_join(tIdPessoas[1],NULL);
-    */
-
-    //Fim da simular
-    InformacaoEnviar("**** A terminar simular **** \n", sockfd);
-
-
+    enviarInformacao("**** A terminar simular **** \n", sockfd);
 }
 
 void main(int argc, char* argv[])
-{/*
-    lerConfiguracao();
-    printf("Numero de locais na discoteca: %d\n",numPistasNaDiscoteca);
-    printf("Lotacao maxima do local A: %d\n",lotacaoMaxLocalA);
-    printf("Lotacao maxima do local B: %d\n",lotacaoMaxLocalB);
-    printf("Lotacao maxima do local C: %d\n",lotacaoMaxLocalC);
-    printf("Lotacao maxima do local D: %d\n",lotacaoMaxLocalD);
-    printf("Lotacao maxima do local E: %d\n",lotacaoMaxLocalE);
-    printf("Lotacao maxima do local F: %d\n",lotacaoMaxLocalF);
-    printf("Inicio da simulacao: %d\n",inicioSimulacao);
-    printf("Fim da simulacao: %d\n",fimSimulacao);
-    printf("Tempo medio para a entrada de um novo user na simulacao: %d\n",tempoMedioNovoUser);
-    printf("Primeiro local a ser acedido pelos users: %d\n",primeiroLocal);
-*/
+{
     //Criar o Socket
     sockfd = criarSocket();
 
