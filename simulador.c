@@ -8,7 +8,7 @@ int sockfd = 0;
 
 //Inicializacao de structs globais:
 struct dadosConfiguracaoSimulacao dados_simulacao;
-struct discoteca discoteca;
+//struct discoteca discoteca;
 struct zonaDiscoteca zona_discoteca[];
 struct pessoa pessoas_t[30];
 
@@ -16,7 +16,7 @@ struct pessoa pessoas_t[30];
 sem_t semaforo_enviar_informacao;
 
 //Tarefas:
-pthread_t t_id_discoteca;
+pthread_t t_id_discoteca[];
 pthread_t tIdPessoas[30];                        //Array com o id das tarefas correspondentes as pessoas
 
 void escreverSimulacao (char texto[]){
@@ -180,14 +180,20 @@ void definirValores(){
     lerConfiguracao();
     printf("Leitura da configuracao inicial completa! \n");
 
-    criarDiscoteca();//colocar o numero de zonas como parametros!!!
+    //criarDiscoteca();//colocar o numero de zonas como parametros!!!
 }
 
-void simular(int sockfd){
+//void criaDiscoteca(){}
+
+void * discoteca (void * ptr){
+    //struct discoteca discoteca = criaDiscoteca();
+}
+
+void simulacao(int sockfd){
 
     definirValores();
 
-    enviarInformacao ("**** A comecar simular **** \n", sockfd);
+    enviarInformacao ("**** A comecar simulacao **** \n", sockfd);
 
     int zero = 0;
 
@@ -197,10 +203,10 @@ void simular(int sockfd){
 
     pthread_join(t_id_discoteca[0],NULL);
 
-    enviarInformacao("**** simular - Discoteca **** \n", sockfd);
-    enviarInformacao("1", sockfd);
+    enviarInformacao("**** A simular - Discoteca **** \n", sockfd);
+    enviarInformacao("++++Coisas a acontecer durante a simulacao++++", sockfd);
 
-    enviarInformacao("**** A terminar simular **** \n", sockfd);
+    enviarInformacao("**** Simulacao terminada **** \n", sockfd);
 }
 
 void main(int argc, char* argv[])
@@ -209,7 +215,7 @@ void main(int argc, char* argv[])
     sockfd = criarSocket();
 
     //Iniciar a simulação
-    simular(sockfd);
+    simulacao(sockfd);
 
     //Terminar o socket
     close(sockfd);
