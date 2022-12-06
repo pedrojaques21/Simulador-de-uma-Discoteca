@@ -1,0 +1,11 @@
+numPistasNaDiscoteca : 6
+lotacaoMaxLocalA : 50
+lotacaoMaxLocalB : 20
+lotacaoMaxLocalC : 10
+lotacaoMaxLocalD : 20
+lotacaoMaxLocalE : 20
+lotacaoMaxLocalF : 30
+inicioSimulacao : 1
+fimSimulacao : 20
+tempoMedioNovoUser : 2
+primeiroLocal : 1
