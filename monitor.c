@@ -4,67 +4,87 @@ bool fim_simulacao = false;
 
 struct discoteca discoteca;
 
-void escreverOutput(char mensagem[])
-{
-    FILE *output_logs;
+void escreverOutput(int newsockfd){
 
-    output_logs = fopen("output_logs.txt", "a");
+	int mensagem = 0;
+    int estado = 0;
+	int numPessoasZona1 = 0;
+    int numPessoasZona2 = 0;
+    int numPessoasZona3 = 0;
+    int numPessoasZona4 = 0;
+    int numPessoasZona5 = 0;
+    int numPessoasZona6 = 0;
+	int tempo = 0;	//tempo médio de espera nas filas?												
 
-    if (output_logs == NULL)
-    {
+	FILE* output_logs = fopen("output_logs.txt", "a");//a acrescenta mensagem ao ficheiro
 
-        printf("ERRO, ficheiro nao foi criado!");
-    }
-    else
-    {
-        // Acrescenta a mensagem no ficheiro de texto
-        fprintf(output_logs, "%s", mensagem);
-        //printf("escreve monitor \n");
-        // Imprime no monitor
-        printf("%s", mensagem);
-    }
+	if(output_logs == NULL){
+		printf("Erro, ficheiro não criado");
+	}
+	else{
+		while(estado!=20){
+			char linhaRecebe[MAXLINE+1];
+			mensagem=recv(newsockfd,linhaRecebe,MAXLINE,0);
 
-    fclose(output_logs);
+			sscanf(linhaRecebe,"%d %d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6,&tempo);
+			
+			switch(estado){
+				case 1:{
+					fprintf(output_logs,"**** Simulacao - Discoteca ****\n");
+					printf("**** Simulacao - Discoteca ****\n");
+					break;
+				}
+				case 2:{
+					fprintf(output_logs, "Pessoas na Entrada: %d\n" ,numPessoasZona1);
+					printf("Pessoas na Entrada: %d\n" ,numPessoasZona1);
+					break;
+				}
+				case 3:{
+					fprintf(output_logs,"Pessoas na Pista de Dança: %d/%d\n" ,numPessoasZona2);
+					printf("Pessoas na Pista de Dança: %d/%d\n" ,numPessoasZona2);
+					break;
+				}
+				case 4:{
+					fprintf(output_logs, "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3);
+					printf( "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3);
+					break;
+				}
+				case 5:{
+                    fprintf(output_logs, "WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
+					printf("WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
+					break;
+				}
+                case 6:{
+                    fprintf(output_logs, "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5);
+					printf( "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5);	
+					break;
+                }
+                case 7:{
+                    fprintf(output_logs, "Pessoas no Bar: %d/%d\n",numPessoasZona6);
+					printf( "Pessoas no Bar: %d/%d\n",numPessoasZona6);
+					break;
+                }
+                case 8:{ //tempo médio
+                /*
+					tempoEspera += tempo;
+					numPessoasIsolamentoMonitor += numPessoasIsolamento;
+
+					tMedioIsolamento = (double)tempoEsperaIsolamento / (double)numPessoasIsolamentoMonitor;
+
+					fprintf(output_logs,ANSI_COLOR_GREEN "Tempo médio no isolamento - Centro1: %d\n" ANSI_COLOR_RESET,tMedioIsolamento);//escreve no ficheiro
+					printf(ANSI_COLOR_GREEN "Tempo médio no isolamento - Centro1: %d\n" ANSI_COLOR_RESET,tMedioIsolamento);	*/										//escreve no monitor
+					break;
+				}
+			}
+		}
+	}
+	if(estado==20){
+		fprintf(output_logs,"**** Fim da simulacao ****\n");
+		printf("**** Fim da simulacao ****\n");
+		fclose(output_logs);
+	}
 }
 
-void escreveMensagem()
-{
-
-    char mensagemEscreve[500];
-
-    sprintf(mensagemEscreve, "Discoteca \n");
-    escreverOutput(mensagemEscreve);
-    sprintf(mensagemEscreve, "Numero da zona: %i \n", discoteca.numZonas);
-    escreverOutput(mensagemEscreve);
-    sprintf(mensagemEscreve, "Numero de pessoas dentro: %i \n", discoteca.numUtilizadores);
-    escreverOutput(mensagemEscreve);
-}
-
-void str_echo(int sockfd)
-{
-    int n;
-    char linha[MAXLINE];
-    while (!fim_simulacao)
-    {
-        // printf(read(sockfd, linha, MAXLINE));               // Enquanto a simulacao estiver a ocorrer
-        n = read(sockfd, linha, MAXLINE); // n guarda o tamanho do line (buffer)
-        if (n == 0)
-        { // nao ha mensagem a ler
-            printf("Entrei no n==0");
-            break;
-        }
-        else if (n < 0)
-        {
-            perror("ERRO: erro ao ler a linha");
-        }
-        else
-        { // ha mensagem a ler
-            escreveMensagem();
-            printf("%s\n", linha); // imprime a mensagem
-            break;
-        }
-    }
-}
 
 void iniciaSimulador()
 {
@@ -111,7 +131,7 @@ void iniciaSimulador()
     else if (childpid == 0)
     {
         close(sockfd);
-        str_echo(newsockfd);
+        //str_echo(newsockfd);
         exit(0);
     }
 

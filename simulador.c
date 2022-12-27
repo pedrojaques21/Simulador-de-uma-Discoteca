@@ -19,66 +19,38 @@ sem_t semaforo_enviar_informacao;
 pthread_t t_id_discoteca[1];
 pthread_t tIdPessoas[30];                        //Array com o id das tarefas correspondentes as pessoas
 
-/*void escreverSimulacao (char texto[]){
+int criarSocket(){
 
-    FILE* ficheiroApontador; 									//Cria um apontador para um ficheiro
-    ficheiroApontador = fopen("DadosDaSimulacao.txt","a"); 						//Abre o ficheiro. "a" -> acrescenta texto
-    if(ficheiroApontador == NULL){ 									//Verifica se o ficheiro existe
-        printf ("Erro ao abrir o ficheiro ");
-    }
-    else{
-        fprintf(ficheiroApontador, "%s", texto); 						//Coloca no ficheiro o que foi passado como argumento
-    }
-}*/
+    struct sockaddr_un serv_addr;
+    int servlen;
 
-void enviarInformacao(char *ficheiroApontador, int sockfd){
+    //Comecamos por criar o socket
+    if ( (sockfd = socket(AF_UNIX, SOCK_STREAM,0) ) < 0 )
+        perror(" Erro ao criar o stream socket! ");
 
-    sem_wait(&semaforo_enviar_informacao);        //Coloca o semaforo em espera para mais nenhum processo poder aceder
+    //Socket a 0 -> Limpeza
+    bzero((char*)&serv_addr, sizeof(serv_addr));
 
-    char buffer[MAXLINE]; 						                       // criar buffer
-    int tamanho_informacao = 0;   									//tamanho buffer
+    //Informa o dominio do socket
+    serv_addr.sun_family=AF_UNIX;
+    strcpy(serv_addr.sun_path,UNIXSTR_PATH);
+    servlen=strlen(serv_addr.sun_path)+sizeof(serv_addr.sun_family);
 
-    if( strcpy( buffer, ficheiroApontador ) != 0 ){ 							//Se houver mensagem
-        tamanho_informacao = strlen( buffer ) + 1;  							// Adicionar um espaco para fazer disto uma string
-        if( write( sockfd, buffer, tamanho_informacao ) != tamanho_informacao ){ 				// verifica se o tamanho do buffer e diferente que o tamanho da mensagem
-            perror("====== Erro ao enviar os dados! ====== \n"); 			// Produz uma mensagem de erro personalizada, em vez do erro padrao
-        }
-        else{
-            printf ( "Mensagem Enviada! \n" );
+    //Realiza a ligacao com o socket
+    bool simulacaoOcorre = false;
+    while (connect(sockfd, (struct sockaddr *) &serv_addr, servlen) < 0){
+        if(simulacaoOcorre == false){
+            printf("Espera monitor \n");
+            simulacaoOcorre = true;
         }
     }
 
-    //usleep(2000);
-    sem_post(&semaforo_enviar_informacao); 								//Abre o trinco -> se algum processo quiser entrar pode
-}
-
-// Função responsável por ler o ficheiro de configuracao
-
-void lerConfiguracao()
-{
-    FILE* configuracao_simulacao;
-
-    configuracao_simulacao = fopen("configuracao_simulacao.txt", "r");
-
-    if(configuracao_simulacao != NULL){
-
-        char linha[50],
-            parametro[50];
-        int valor;
-
-        while(fgets(linha, sizeof(linha), configuracao_simulacao) != NULL){
-
-            sscanf(linha, "%s : %d", parametro , &valor);
-
-            definirVariaveis(parametro, valor);
-
-        }
-    } else {
-        printf("Failure opening file. Try again! \n");
+    if(sockfd<0){
+        perror ("ACCEPT ERROR");
     }
 
-    fclose(configuracao_simulacao);
-
+    printf ("Simulador feito \n");
+    return sockfd;
 }
 
 void definirVariaveis(char parametro[50], int valor) {
@@ -139,38 +111,64 @@ void definirVariaveis(char parametro[50], int valor) {
 
 }
 
-int criarSocket(){
+// Função responsável por ler o ficheiro de configuracao
+void lerConfiguracao()
+{
+    FILE* configuracao_simulacao;
 
-    struct sockaddr_un serv_addr;
-    int servlen;
+    configuracao_simulacao = fopen("configuracao_simulacao.txt", "r");
 
-    //Comecamos por criar o socket
-    if ( (sockfd = socket(AF_UNIX, SOCK_STREAM,0) ) < 0 )
-        perror(" Erro ao criar o stream socket! ");
+    if(configuracao_simulacao != NULL){
 
-    //Socket a 0 -> Limpeza
-    bzero((char*)&serv_addr, sizeof(serv_addr));
+        char linha[50],
+            parametro[50];
+        int valor;
 
-    //Informa o dominio do socket
-    serv_addr.sun_family=AF_UNIX;
-    strcpy(serv_addr.sun_path,UNIXSTR_PATH);
-    servlen=strlen(serv_addr.sun_path)+sizeof(serv_addr.sun_family);
+        while(fgets(linha, sizeof(linha), configuracao_simulacao) != NULL){
 
-    //Realiza a ligacao com o socket
-    bool simulacaoOcorre = false;
-    while (connect(sockfd, (struct sockaddr *) &serv_addr, servlen) < 0){
-        if(simulacaoOcorre == false){
-            printf("Espera monitor \n");
-            simulacaoOcorre = true;
+            sscanf(linha, "%s : %d", parametro , &valor);
+
+            definirVariaveis(parametro, valor);
+
         }
+    } else {
+        printf("Failure opening file. Try again! \n");
     }
 
-    if(sockfd<0){
-        perror ("ACCEPT ERROR");
-    }
+    fclose(configuracao_simulacao);
 
-    printf ("Simulador feito \n");
-    return sockfd;
+}
+
+void enviarInformacao(int sockfd, int estado){	
+    sem_wait(&semaforo_enviar_informacao);        //Coloca o semaforo em espera para mais nenhum processo poder aceder
+
+    char buffer[MAXLINE]; 						                       // criar buffer
+    int tamanho_informacao = 0;   									//tamanho buffer
+
+    sprintf(buffer,"%s", estado);
+	tamanho_informacao=strlen(buffer)+1;								//add 1 para a criação da string (/0)
+
+	if(send(sockfd,buffer,tamanho_informacao,0)!=tamanho_informacao){					//envio dos dados para o cliente
+		perror("----------- Erro no envio de dados -----------\n");											
+	}
+    else{
+            printf(buffer);
+            printf ( "Mensagem Enviada! \n" );
+        }
+    /*
+    if( strcpy( buffer, ficheiroApontador ) != 0 ){ 							//Se houver mensagem
+        tamanho_informacao = strlen( buffer ) + 1;  							// Adicionar um espaco para fazer disto uma string
+        if( write( sockfd, buffer, tamanho_informacao ) != tamanho_informacao ){ 				// verifica se o tamanho do buffer e diferente que o tamanho da mensagem
+            perror("====== Erro ao enviar os dados! ====== \n"); 			// Produz uma mensagem de erro personalizada, em vez do erro padrao
+        }
+        else{
+            printf(buffer);
+            printf ( "Mensagem Enviada! \n" );
+        }
+    }*/
+    //sleep(1);
+    //usleep(2000);
+    sem_post(&semaforo_enviar_informacao); 								//Abre o trinco -> se algum processo quiser entrar pode
 }
 
 void definirValores(){
@@ -193,7 +191,9 @@ void simulacao(int sockfd){
 
     definirValores();
 
-    enviarInformacao ("**** A comecar simulacao **** \n", sockfd);
+    enviarInformacao (sockfd,1);
+
+    //printDiscoteca
 
     pthread_create (&t_id_discoteca[0], NULL, discoteca, NULL); // Criacao de uma tarefa. Esta tarefa vai criar o primeiro centro de testagem
     printf("Acabei de criar a tarefa da discoteca \n");
@@ -201,15 +201,12 @@ void simulacao(int sockfd){
     pthread_join(t_id_discoteca[0],NULL);
     printf("Acabei de juntar a tarefa da discoteca \n");
 
-    enviarInformacao("**** A simular - Discoteca **** \n", sockfd);
-    printf("Comecou a simulacao \n");
-    
-    enviarInformacao("++++Coisas a acontecer durante a simulacao++++", sockfd);
+    //print(acabou a simulacao)
 
-    enviarInformacao("**** Simulacao terminada **** \n", sockfd);
+    enviarInformacao(sockfd,20);
 }
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
     //Criar o Socket
     sockfd = criarSocket();

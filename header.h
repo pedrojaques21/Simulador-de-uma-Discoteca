@@ -13,7 +13,7 @@
 #include <ctype.h>
 
 
-#define UNIXSTR_PATH "/tmp/s.2046919"
+#define UNIXSTR_PATH "/tmp/s.2045919"
 #define MAXLINE 512
 
 struct dadosConfiguracaoSimulacao{
