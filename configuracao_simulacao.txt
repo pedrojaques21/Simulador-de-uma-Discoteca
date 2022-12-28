@@ -1,4 +1,5 @@
 numPistasNaDiscoteca : 6
+numPessoasCriar : 200
 lotacaoMaxLocalA : 50
 lotacaoMaxLocalB : 20
 lotacaoMaxLocalC : 10
@@ -7,5 +8,3 @@ lotacaoMaxLocalE : 20
 lotacaoMaxLocalF : 30
 inicioSimulacao : 1
 fimSimulacao : 20
-tempoMedioNovoUser : 2
-primeiroLocal : 1

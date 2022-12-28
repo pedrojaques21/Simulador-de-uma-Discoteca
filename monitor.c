@@ -2,7 +2,7 @@
 
 bool fim_simulacao = false;
 
-struct discoteca discoteca;
+struct Discoteca discoteca;
 
 void escreverOutput(int newsockfd){
 

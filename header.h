@@ -16,36 +16,24 @@
 #define UNIXSTR_PATH "/tmp/s.2045919"
 #define MAXLINE 512
 
-struct dadosConfiguracaoSimulacao{
-    int numPistasNaDiscoteca;
-    int lotacaoMaxLocalA;
-    int lotacaoMaxLocalB;
-    int lotacaoMaxLocalC;
-    int lotacaoMaxLocalD;
-    int lotacaoMaxLocalE;
-    int lotacaoMaxLocalF;
+struct DadosConfiguracao{
+    int numZonasNaDiscoteca;
+    int numPessoasCriar;
+    int lotacaoMax[6];
     int inicioSimulacao;
     int fimSimulacao;
-    int tempoMedioNovoUser;
-    int primeiroLocal;
 };
 
-struct discoteca{
-    int numZonas;
-    int numUtilizadores;
+struct Discoteca{
+    int numZona;
+    int numPessoasDentro;
+    int lotacaoMax;
+    float tempoMaxDentro;
 };
 
-struct zonaDiscoteca{
-    char _idZona;
-    int numUtilizadores;
-    int lotacao;
-    float tempoMaximo;
-};
-
-struct pessoa{
+struct Pessoa{
     int zonaDiscoteca;
-    bool naFila;
-    bool desistiu;
+    bool sexo;
 };
 
 #endif //SIMULADOR_DE_UMA_DISCOTECA_HEADER_H
