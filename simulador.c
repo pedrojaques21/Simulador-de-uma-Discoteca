@@ -1,7 +1,4 @@
-// Declaraçao das variaveis globais
 #include "header.h"
-
-char mensagem [50];
 
 //SOCKETS:
 int sockfd = 0;
@@ -140,19 +137,21 @@ void lerConfiguracao()
     fclose(configuracao_simulacao);
 }
 
-void enviarInformacao(int sockfd, int estado, int numPessoasZona1, int numPessoasZona2, int numPessoasZona3, int numPessoasZona4, int numPessoasZona5, int numPessoasZona6, int tempo){	
-    sem_wait(&semaforo_enviarInformacao);        //Coloca o semaforo em espera para mais nenhum processo poder aceder
-	char buffer[MAXLINE];																					//Cria buffer
-	int lenInformacao=0;																					//Tamanho buffer
+void enviarInformacao(int sockfd, int estado, int numPessoasZona1, int numPessoasZona2, int numPessoasZona3, int numPessoasZona4, int numPessoasZona5, int numPessoasZona6){
+    sem_wait(&semaforo_enviarInformacao); //Coloca o semaforo em espera para mais nenhum processo poder aceder
+	char buffer[MAXLINE];
+	int lenInformacao=0;
+	sprintf(buffer,"%d %d %d %d %d %d %d",estado,numPessoasZona1,numPessoasZona2,numPessoasZona3,numPessoasZona4,numPessoasZona5,numPessoasZona6);
+	lenInformacao=strlen(buffer)+1;	//Adicionar um espaço para fazer disto uma string
+	
+    printf("conteudo do buffer:%s\n",&buffer[0]);
 
-	sprintf(buffer,"%d %d %d %d %d %d %d %d",estado,numPessoasZona1,numPessoasZona2,numPessoasZona3,numPessoasZona4,numPessoasZona5,numPessoasZona6,tempo);
-	lenInformacao=strlen(buffer)+1;																			//Adicionar um espaço para fazer disto uma string
-
-	if(send(sockfd,buffer,lenInformacao,0)!=lenInformacao){													//AQUI É ONDE OS DADOS SÃO ENVIADOS 
-		perror("******Erro ao enviar dados******\n");													//Produz uma mensagem de erro personalizada
+    if(send(sockfd,buffer,lenInformacao,0)!=lenInformacao){
+		perror("******Erro ao enviar dados******\n");
 	}
 	sleep(1);
-    sem_post(&semaforo_enviarInformacao); 								//Abre o trinco -> se algum processo quiser entrar pode
+    sem_post(&semaforo_enviarInformacao); //Abre o trinco -> se algum processo quiser entrar pode
+    printf("Informacao enviada! \n");
 }
 
 void criaDiscoteca(int numZona, int lotacaoMax){
@@ -160,9 +159,8 @@ void criaDiscoteca(int numZona, int lotacaoMax){
     criaZona->numZona = numZona;
     criaZona->numPessoasDentro = 0;
     criaZona->lotacaoMax = lotacaoMax;
-    criaZona->tempoMaxDentro = 120; //Tempo máximo das pessoas dentro da zona = 120 minutos
 
-    printf(" Criada Zona : %d PessoasDentro : %d LotacaoMax : %d \n", criaZona->numZona,criaZona->numPessoasDentro,criaZona->lotacaoMax);
+    printf("Criada Zona : %d PessoasDentro : %d LotacaoMax : %d \n", criaZona->numZona,criaZona->numPessoasDentro,criaZona->lotacaoMax);
 }
 
 void definirValores(){
@@ -180,6 +178,7 @@ void definirValores(){
     for(int i=0;i<numZonasNaDiscoteca;i++){
         criaDiscoteca(i+1, lotacaoMax[i]);
     }
+    printf("Valores definidos! \n");
 
 }
 
@@ -213,14 +212,20 @@ void simulacao(int sockfd){
 
     definirValores();
 
-    enviarInformacao(sockfd,1,0,0,0,0,0,0,0);
-
-    //printDiscoteca
+    enviarInformacao(sockfd,1,0,0,0,0,0,0);
+    int e;
     for(int i=0;i<numZonasNaDiscoteca;i++){
-        pthread_create (&tarefasZonas[i], NULL, discoteca, i+1); // Criacao de uma tarefa. Esta tarefa vai criar a primeira zona
-    }
+        e = i+1;
+        pthread_create(&tarefasZonas[i], NULL, discoteca, &e);
+    } 
+    //Testar se dava certo:
+    /*if (pthread_create(&tarefasZonas[i], NULL, discoteca, &e) != 0) {// Criacao de uma tarefa. Esta tarefa vai criar as zonas
+        printf("erro na criacao da tarefa\n");
+        return 1;
+    }*/
+    
     printf("Acabei de criar as tarefas da discoteca \n");
-
+    
     for(int i=0;i<numPessoasCriar;i++){
 		pthread_create(&tarefasPessoas[i], NULL, pessoa, NULL);
 	}
@@ -235,7 +240,7 @@ void simulacao(int sockfd){
     }
     printf("Acabei de juntar as tarefas todas\n");
 
-    enviarInformacao(sockfd,20,0,0,0,0,0,0,0);
+    enviarInformacao(sockfd,20,0,0,0,0,0,0);
 }
 
 int main(int argc, char* argv[])

@@ -1,9 +1,5 @@
 #include "header.h"
 
-bool fim_simulacao = false;
-
-struct Discoteca discoteca;
-
 void escreverOutput(int newsockfd){
 
 	int mensagem = 0;
@@ -13,8 +9,7 @@ void escreverOutput(int newsockfd){
     int numPessoasZona3 = 0;
     int numPessoasZona4 = 0;
     int numPessoasZona5 = 0;
-    int numPessoasZona6 = 0;
-	int tempo = 0;	//tempo médio de espera nas filas?												
+    int numPessoasZona6 = 0;											
 
 	FILE* output_logs = fopen("output_logs.txt", "a");//a acrescenta mensagem ao ficheiro
 
@@ -26,7 +21,7 @@ void escreverOutput(int newsockfd){
 			char linhaRecebe[MAXLINE+1];
 			mensagem=recv(newsockfd,linhaRecebe,MAXLINE,0);
 
-			sscanf(linhaRecebe,"%d %d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6,&tempo);
+			sscanf(linhaRecebe,"%d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6);
 			
 			switch(estado){
 				case 1:{
@@ -64,17 +59,6 @@ void escreverOutput(int newsockfd){
 					printf( "Pessoas no Bar: %d/%d\n",numPessoasZona6);
 					break;
                 }
-                case 8:{ //tempo médio
-                /*
-					tempoEspera += tempo;
-					numPessoasIsolamentoMonitor += numPessoasIsolamento;
-
-					tMedioIsolamento = (double)tempoEsperaIsolamento / (double)numPessoasIsolamentoMonitor;
-
-					fprintf(output_logs,ANSI_COLOR_GREEN "Tempo médio no isolamento - Centro1: %d\n" ANSI_COLOR_RESET,tMedioIsolamento);//escreve no ficheiro
-					printf(ANSI_COLOR_GREEN "Tempo médio no isolamento - Centro1: %d\n" ANSI_COLOR_RESET,tMedioIsolamento);	*/										//escreve no monitor
-					break;
-				}
 			}
 		}
 	}
@@ -86,7 +70,7 @@ void escreverOutput(int newsockfd){
 }
 
 
-void iniciaSimulador()
+void iniciaSimulador()//bool
 {
 
     int sockfd, newsockfd, clilen, childpid, servlen;
@@ -131,12 +115,14 @@ void iniciaSimulador()
     else if (childpid == 0)
     {
         close(sockfd);
-        //str_echo(newsockfd);
+        //fim_simulacao??? = escreverOutput(newsockfd);
+        escreverOutput(newsockfd);
         exit(0);
     }
 
     // Fecha o socket filho
     close(newsockfd);
+    //return fim_simulacao;
 }
 
 
@@ -145,13 +131,12 @@ int main(int argc, char const * argv[])
     // Interface com o utilizador
     printf("Escolha uma das opcoes: \n");
     printf("1. Iniciar Simulacao \n");
-    //printf("2. Apagar conteudo do ficheiro da simulacao \n");
-    // printf("3. Terminar a simulacao  \n");
     int opcao = 0; // guarda a opcao selecionada pelo utilizador
+    bool fim_simulacao = false;
     while (!fim_simulacao)
     {
 
-        while (opcao != 1  /*&& opcao != 2 && opcao!=3*/)
+        while (opcao != 1)
         {
             printf("Selecione uma das opcoes: \n");
             scanf("%d", &opcao); // guarda a opcao selecionada
@@ -159,14 +144,10 @@ int main(int argc, char const * argv[])
 
         if (opcao == 1)
         {
+            //fim_simulacao = iniciaSimulador();
             iniciaSimulador();
             printf("Opcao escolhida = %d\n", opcao);
         }
-        /*else if (opcao == 2)
-        {
-            printf("Apaga ficheiro log");
-        }*/
     }
-    printf("Antes do return 0");
     return 0;
 }

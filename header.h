@@ -28,7 +28,6 @@ struct Discoteca{
     int numZona;
     int numPessoasDentro;
     int lotacaoMax;
-    float tempoMaxDentro;
 };
 
 struct Pessoa{
