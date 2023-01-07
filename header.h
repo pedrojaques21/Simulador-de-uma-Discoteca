@@ -31,6 +31,7 @@ struct Discoteca{
 };
 
 struct Pessoa{
+    int id;
     int zonaDiscoteca;
     bool sexo;
 };

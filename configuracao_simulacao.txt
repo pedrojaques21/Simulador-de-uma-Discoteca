@@ -1,9 +1,9 @@
 numZonasNaDiscoteca : 6
 numPessoasCriar : 200
-lotacaoMaxZona1 : 50
-lotacaoMaxZona2 : 20
+lotacaoMaxZona1 : 1
+lotacaoMaxZona2 : 50
 lotacaoMaxZona3 : 10
-lotacaoMaxZona4 : 20
+lotacaoMaxZona4 : 1
 lotacaoMaxZona5 : 20
 lotacaoMaxZona6 : 30
 inicioSimulacao : 1

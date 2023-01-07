@@ -30,6 +30,9 @@ int lotacaoMax[6];
 int inicioSimulacao = 0;
 int fimSimulacao = 0;
 
+//Variaveis globais:
+int idPessoa = 1;
+
 int criarSocket(){
 
     struct sockaddr_un serv_addr;
@@ -163,41 +166,29 @@ void criaDiscoteca(int numZona, int lotacaoMax){
     printf("Criada Zona : %d PessoasDentro : %d LotacaoMax : %d \n", criaZona->numZona,criaZona->numPessoasDentro,criaZona->lotacaoMax);
 }
 
-void definirValores(){
 
-    sem_init(&semaforo_enviarInformacao,0,1);
-    sem_init(&semaforo_filaZona1,0,50);//com prioridade a mulheres
-	sem_init(&semaforo_filaZona2,0,30);
-    sem_init(&semaforo_filaZona3,0,15);
-    sem_init(&semaforo_filaZona4,0,10);//wc
-    sem_init(&semaforo_filaZona5,0,15);
-    sem_init(&semaforo_filaZona6,0,20);//com prioridade a mulheres
-
-    lerConfiguracao();
-    printf("Leitura da configuracao inicial completa! \n");
-    for(int i=0;i<numZonasNaDiscoteca;i++){
-        criaDiscoteca(i+1, lotacaoMax[i]);
-    }
-    printf("Valores definidos! \n");
-
-}
 
 struct Pessoa criaPessoa(){
     pthread_mutex_lock(&trincoPessoa);
     struct Pessoa p;
+    p.id = idPessoa;
+    idPessoa++;
     p.zonaDiscoteca = 1;
-    int randSexo = rand()%1;
+    int randSexo = rand()%2;
     p.sexo = randSexo; //1 = mulher/prioridade e 0 = homem/sem prioridade
     pthread_mutex_unlock(&trincoPessoa);
+    char sexoM[10] = "Masculino"; //depois mudar o p.sexo para o char q contém isto? 
+    char sexoF[10] = "Feminimo"; //ou deixar booleano para nas filas distinguir prioridade de forma mais simples????
+    printf("Pessoa %d do sexo %s criada na zona %d \n", p.id, p.sexo?sexoF:sexoM, p.zonaDiscoteca);
     return p;
 }
 
 void * discoteca(void *apontador){//Recebe como argumento o número da zona em que a tarefa foi criada
-	int *numZona=(int*) apontador;
+	int *numZona = (int*) apontador;
 	struct Discoteca *zonaDiscoteca=&(zonaGlobal[*numZona]);//zonaDiscoteca é um array em que cada posição é o endereço do array zonaGlobal na posição indicada por *numZona
 }
 
-void * pessoa (void * ptr){
+void * pessoa (void *null){
     struct Pessoa p = criaPessoa();
     //if zona 1 .....
             //pthread_mutex_lock(&trincoOrdemJogadoresEquipa1);
@@ -206,6 +197,24 @@ void * pessoa (void * ptr){
 
         //pthread_mutex_unlock(&trincoOrdemJogadoresEquipa1);
     //if zona 2...
+}
+void definirValores(){
+
+    sem_init(&semaforo_enviarInformacao,0,1);
+    sem_init(&semaforo_filaZona1,0,50);//Entrada, com prioridade a mulheres
+	sem_init(&semaforo_filaZona2,0,30);//pista danca
+    sem_init(&semaforo_filaZona3,0,15);//mini-golfe
+    sem_init(&semaforo_filaZona4,0,10);//wc
+    sem_init(&semaforo_filaZona5,0,15);//snooker
+    sem_init(&semaforo_filaZona6,0,20);//Bar, com prioridade a mulheres
+
+    lerConfiguracao();
+    printf("Leitura da configuracao inicial completa! \n");
+    for(int i=0;i<numZonasNaDiscoteca;i++){
+        criaDiscoteca(i+1, lotacaoMax[i]);
+    }
+    printf("Valores definidos! \n");
+
 }
 
 void simulacao(int sockfd){
@@ -223,13 +232,14 @@ void simulacao(int sockfd){
         printf("erro na criacao da tarefa\n");
         return 1;
     }*/
-    
     printf("Acabei de criar as tarefas da discoteca \n");
     
     for(int i=0;i<numPessoasCriar;i++){
 		pthread_create(&tarefasPessoas[i], NULL, pessoa, NULL);
 	}
-    printf("Acabei de criar as tarefas das pessoas \n");  
+
+    sleep(0.1); //para o printf não ser imprimido antes da última pessoa criada
+    printf("Acabei de criar as tarefas das pessoas \n");
 
     for(int i=0;i<numPessoasCriar;i++){
 		pthread_join(&tarefasPessoas[i], NULL);
