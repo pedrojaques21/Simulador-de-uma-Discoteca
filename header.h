@@ -20,8 +20,6 @@ struct DadosConfiguracao{
     int numZonasNaDiscoteca;
     int numPessoasCriar;
     int lotacaoMax[6];
-    int inicioSimulacao;
-    int fimSimulacao;
 };
 
 struct Discoteca{
@@ -33,7 +31,8 @@ struct Discoteca{
 struct Pessoa{
     int id;
     int zonaDiscoteca;
-    bool sexo;
+    char sexo [10];
+    int historico[5];
 };
 
 #endif //SIMULADOR_DE_UMA_DISCOTECA_HEADER_H
