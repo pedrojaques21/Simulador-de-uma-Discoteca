@@ -1,0 +1,8 @@
+numZonasNaDiscoteca : 6
+numPessoasCriar : 100
+lotacaoMaxZona2 : 50
+lotacaoMaxZona3 : 10
+lotacaoMaxZona4 : 1
+lotacaoMaxZona5 : 20
+lotacaoMaxZona6 : 30
+probDesistencia : 10
