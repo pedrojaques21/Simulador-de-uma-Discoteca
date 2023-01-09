@@ -37,4 +37,3 @@ struct Pessoa{
 
 #endif //SIMULADOR_DE_UMA_DISCOTECA_HEADER_H
 
-

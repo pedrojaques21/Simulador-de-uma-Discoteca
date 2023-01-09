@@ -22,7 +22,7 @@ pthread_mutex_t trincoPessoa;
 pthread_t tarefasZonas[6];
 pthread_t tarefasPessoas[100];
 
-//Variaveis de ficheiro// 
+//Variaveis de ficheiro//
 int numZonasNaDiscoteca = 0;
 int numPessoasCriar = 0;
 int lotacaoMax[5];
@@ -60,7 +60,7 @@ int criarSocket(){
     bool simulacaoOcorre = false;
     while (connect(sockfd, (struct sockaddr *) &serv_addr, servlen) < 0){
         if(simulacaoOcorre == false){
-            printf("Espera monitor \n");
+            printf("A aguardar pela conexão do Monitor! \n");
             simulacaoOcorre = true;
         }
     }
@@ -76,14 +76,12 @@ int criarSocket(){
 // Função responsável por ler o ficheiro de configuracao
 void lerConfiguracao()
 {
-    FILE* configuracao_simulacao;
-
-    configuracao_simulacao = fopen("configuracao_simulacao.txt", "r");
+    FILE* configuracao_simulacao = fopen("configuracao_simulacao.txt", "r");
 
     if(configuracao_simulacao != NULL){
 
         char linha[50],
-            parametro[50];
+                parametro[50];
         int valor;
 
         while(fgets(linha, sizeof(linha), configuracao_simulacao) != NULL){
@@ -138,17 +136,17 @@ void lerConfiguracao()
 
 void enviarInformacao(int sockfd, int estado, int numPessoasZona1, int numPessoasZona2, int numPessoasZona3, int numPessoasZona4, int numPessoasZona5, int numPessoasZona6){
     sem_wait(&semaforo_enviarInformacao); //Coloca o semaforo em espera para mais nenhum processo poder aceder
-	char buffer[MAXLINE];
-	int lenInformacao=0;
-	sprintf(buffer,"%d %d %d %d %d %d %d",estado,numPessoasZona1,numPessoasZona2,numPessoasZona3,numPessoasZona4,numPessoasZona5,numPessoasZona6);
-	lenInformacao=strlen(buffer)+1;	//Adicionar um espaço para fazer disto uma string
-	
+    char buffer[MAXLINE];
+    int lenInformacao=0;
+    sprintf(buffer,"%d %d %d %d %d %d %d",estado,numPessoasZona1,numPessoasZona2,numPessoasZona3,numPessoasZona4,numPessoasZona5,numPessoasZona6);
+    lenInformacao=strlen(buffer)+1;	//Adicionar um espaço para fazer disto uma string
+
     printf("conteudo do buffer:%s\n",&buffer[0]);
 
     if(send(sockfd,buffer,lenInformacao,0)!=lenInformacao){
-		perror("******Erro ao enviar dados******\n");
-	}
-	sleep(1);
+        perror("******Erro ao enviar dados******\n");
+    }
+    sleep(1);
     sem_post(&semaforo_enviarInformacao); //Abre o trinco -> se algum processo quiser entrar pode
     printf("Informacao enviada! \n");
 }
@@ -168,7 +166,7 @@ struct Pessoa criaPessoa(){
     p.id = idPessoa;
     idPessoa++;
     p.zonaDiscoteca = 1;
-   if (rand()%2 == 1){ //1 = mulher/prioridade e 0 = homem/sem prioridade
+    if (rand()%2 == 1){ //1 = mulher/prioridade e 0 = homem/sem prioridade
         strcpy(p.sexo,"Feminimo");
     }
     else{
@@ -176,8 +174,8 @@ struct Pessoa criaPessoa(){
     }
     int e = 2;
     for(int i=0; i<5; i++){
-    p.historico[i] = e;
-    e++;
+        p.historico[i] = e;
+        e++;
     }
     pthread_mutex_unlock(&trincoPessoa);
     printf("Pessoa %d do sexo %s criada\n", p.id, p.sexo);
@@ -185,20 +183,20 @@ struct Pessoa criaPessoa(){
 }
 
 void * discoteca(void *apontador){//Recebe como argumento o número da zona em que a tarefa foi criada
-	int *numZona = (int*) apontador;
-	struct Discoteca *zonaDiscoteca=&(zonaGlobal[*numZona]);//zonaDiscoteca é um array em que cada posição é o endereço do array zonaGlobal na posição indicada por *numZona
+    int *numZona = (int*) apontador;
+    struct Discoteca *zonaDiscoteca=&(zonaGlobal[*numZona]);//zonaDiscoteca é um array em que cada posição é o endereço do array zonaGlobal na posição indicada por *numZona
 }
 
 int desistencia() {
 
-	int random = rand()%100 + 1;
+    int random = rand()%100 + 1;
 
-	if (random < probDesistencia) {
-		return 1;
-	}
-	else {
-		return 0;
-	}
+    if (random < probDesistencia) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
 void * pessoa (void *null){
@@ -242,7 +240,7 @@ void * pessoa (void *null){
             sem_wait(&semaforo_filaZona2);//Podem estar até 20 pessoas na fila
             printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
             if(nPessoasZona2 == lotacaoMax[p.zonaDiscoteca-2]){														//significa que não há lugares livres aó faz sentido definir uma desistência
-				desiste = desistencia();
+                desiste = desistencia();
                 if(desiste){
                     //sleep(5);
                     sem_post(&semaforo_filaZona2);
@@ -291,7 +289,7 @@ void * pessoa (void *null){
             sem_wait(&semaforo_filaZona3);//Podem estar até 15 pessoas na fila
             printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
             if(nPessoasZona3 == lotacaoMax[p.zonaDiscoteca-2]){
-				desiste = desistencia();
+                desiste = desistencia();
                 if(desiste){
                     //sleep(5);
                     sem_post(&semaforo_filaZona3);
@@ -340,7 +338,7 @@ void * pessoa (void *null){
             sem_wait(&semaforo_filaZona4);//Podem estar até 5 pessoas na fila
             printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
             if(nPessoasZona4 == lotacaoMax[p.zonaDiscoteca-2]){
-				desiste = desistencia();
+                desiste = desistencia();
                 if(desiste){
                     //sleep(5);
                     sem_post(&semaforo_filaZona4);
@@ -389,7 +387,7 @@ void * pessoa (void *null){
             sem_wait(&semaforo_filaZona5);//Podem estar até 5 pessoas na fila
             printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
             if(nPessoasZona5 == lotacaoMax[p.zonaDiscoteca-2]){
-				desiste = desistencia();
+                desiste = desistencia();
                 if(desiste){
                     //sleep(5);
                     sem_post(&semaforo_filaZona5);
@@ -438,7 +436,7 @@ void * pessoa (void *null){
             sem_wait(&semaforo_filaZona6);//Podem estar até 5 pessoas na fila
             printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
             if(nPessoasZona6 == lotacaoMax[p.zonaDiscoteca-2]){
-				desiste = desistencia();
+                desiste = desistencia();
                 if(desiste){
                     //sleep(5);
                     sem_post(&semaforo_filaZona6);
@@ -493,7 +491,7 @@ void definirValores(){
 
     sem_init(&semaforo_enviarInformacao,0,1);
     sem_init(&semaforo_filaZona1,0,25);//Entrada, com prioridade a mulheres
-	sem_init(&semaforo_filaZona2,0,20);//pista danca
+    sem_init(&semaforo_filaZona2,0,20);//pista danca
     sem_init(&semaforo_filaZona3,0,15);//mini-golfe
     sem_init(&semaforo_filaZona4,0,5);//wc
     sem_init(&semaforo_filaZona5,0,15);//snooker
@@ -517,24 +515,24 @@ void simulacao(int sockfd){
     for(int i=0;i<numZonasNaDiscoteca;i++){
         e = i+1;
         pthread_create(&tarefasZonas[i], NULL, discoteca, &e);
-    } 
+    }
     //Testar se dava certo:
     /*if (pthread_create(&tarefasZonas[i], NULL, discoteca, &e) != 0) {// Criacao de uma tarefa. Esta tarefa vai criar as zonas
         printf("erro na criacao da tarefa\n");
         return 1;
     }*/
     printf("Acabei de criar as tarefas da discoteca \n");
-    
+
     for(int i=0;i<numPessoasCriar;i++){
-		pthread_create(&tarefasPessoas[i], NULL, pessoa, NULL);
-	}
+        pthread_create(&tarefasPessoas[i], NULL, pessoa, NULL);
+    }
 
     sleep(0.1); //para o printf não ser imprimido antes da última pessoa criada
     printf("Acabei de criar as tarefas das pessoas \n");
 
     for(int i=0;i<numPessoasCriar;i++){
-		pthread_join(&tarefasPessoas[i], NULL);
-	}
+        pthread_join(&tarefasPessoas[i], NULL);
+    }
 
     for(int i=0;i<numZonasNaDiscoteca;i++){
         pthread_join(&tarefasZonas[i], NULL);
@@ -557,4 +555,3 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
