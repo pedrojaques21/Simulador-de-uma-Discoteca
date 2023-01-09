@@ -16,12 +16,6 @@
 #define UNIXSTR_PATH "/tmp/s.2045919"
 #define MAXLINE 512
 
-struct DadosConfiguracao{
-    int numZonasNaDiscoteca;
-    int numPessoasCriar;
-    int lotacaoMax[6];
-};
-
 struct Discoteca{
     int numZona;
     int numPessoasDentro;
@@ -31,7 +25,7 @@ struct Discoteca{
 struct Pessoa{
     int id;
     int zonaDiscoteca;
-    char sexo [10];
+    char sexo [12];
     int historico[5];
 };
 

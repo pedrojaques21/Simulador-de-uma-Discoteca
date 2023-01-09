@@ -15,59 +15,62 @@ void escreverOutput(int newsockfd){
     int numPessoasZona5 = 0;
     int numPessoasZona6 = 0;
 
-    /*FILE* output_logs = fopen("output_logs.txt", "a");//a acrescenta mensagem ao ficheiro
+    FILE* output_logs = fopen("output_logs.txt", "a");//a acrescenta mensagem ao ficheiro
 
     if(output_logs == NULL){
-        printf("Erro, ficheiro não criado");
+        printf("Erro, ficheiro nao criado");
     }
-    else{*/
-    while(estado!=20){
-        char linhaRecebe[MAXLINE+1];
-        mensagem=recv(newsockfd,linhaRecebe,MAXLINE,0);
+    else{
+        while(estado!=20){
+            char linhaRecebe[MAXLINE+1];
+            mensagem=recv(newsockfd,linhaRecebe,MAXLINE,0);
 
-        sscanf(linhaRecebe,"%d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6);
+            sscanf(linhaRecebe,"%d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6);
 
-        switch(estado){
-            case 1:{
-                //fprintf(output_logs,"**** Simulacao - Discoteca ****\n");
-                printf("**** Simulacao - Discoteca ****\n");
-                break;
-            }
-            case 2:{
-                //fprintf(output_logs, "Pessoas na Entrada: %d\n" ,numPessoasZona1);
-                printf("Pessoas na Entrada: %d\n" ,numPessoasZona1);
-                break;
-            }
-            case 3:{
-                //fprintf(output_logs,"Pessoas na Pista de Dança: %d/%d\n" ,numPessoasZona2);
-                printf("Pessoas na Pista de Dança: %d/%d\n" ,numPessoasZona2, lotacaoMax[estado-3]);
-                break;
-            }
-            case 4:{
-                //fprintf(output_logs, "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3);
-                printf( "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3, lotacaoMax[estado-3]);
-                break;
-            }
-            case 5:{
-                //fprintf(output_logs, "WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
-                printf("WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
-                break;
-            }
-            case 6:{
-                //fprintf(output_logs, "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5);
-                printf( "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5, lotacaoMax[estado-3]);
-                break;
-            }
-            case 7:{
-                //fprintf(output_logs, "Pessoas no Bar: %d/%d\n",numPessoasZona6);
-                printf( "Pessoas no Bar: %d/%d\n",numPessoasZona6, lotacaoMax[estado-3]);
-                break;
-            }
-            case 20:{
-                //fprintf(output_logs,"**** Fim da simulacao ****\n");
-                printf("**** Fim da simulacao ****\n");
-                fimdasimulacao = true;
-                //fclose(output_logs);
+            switch(estado){
+                case 1:{
+                    fprintf(output_logs,"**** Simulacao - Discoteca ****\n");
+                    printf("**** Simulacao - Discoteca ****\n");
+                    break;
+                }
+                case 2:{
+                    fprintf(output_logs, "Pessoas na Entrada: %d\n" ,numPessoasZona1);
+                    printf("Pessoas na Entrada: %d\n" ,numPessoasZona1);
+                    break;
+                }
+                case 3:{
+                    fprintf(output_logs,"Pessoas na Pista de Danca: %d/%d\n" ,numPessoasZona2,  lotacaoMax[estado-3]);
+                    printf("Pessoas na Pista de Danca: %d/%d\n" ,numPessoasZona2, lotacaoMax[estado-3]);
+                    break;
+                }
+                case 4:{
+                    fprintf(output_logs, "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3, lotacaoMax[estado-3]);
+                    printf( "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3, lotacaoMax[estado-3]);
+                    break;
+                }
+                case 5:{
+                    fprintf(output_logs, "WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
+                    fprintf(output_logs, "WC: %d/%d\n", numPessoasZona4, lotacaoMax[estado-3]);
+                    printf("WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
+                    printf( "WC: %d/%d\n", numPessoasZona4, lotacaoMax[estado-3]);
+                    break;
+                }
+                case 6:{
+                    fprintf(output_logs, "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5, lotacaoMax[estado-3]);
+                    printf( "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5, lotacaoMax[estado-3]);
+                    break;
+                }
+                case 7:{
+                    fprintf(output_logs, "Pessoas no Bar: %d/%d\n",numPessoasZona6, lotacaoMax[estado-3]);
+                    printf( "Pessoas no Bar: %d/%d\n",numPessoasZona6, lotacaoMax[estado-3]);
+                    break;
+                }
+                case 20:{
+                    fprintf(output_logs,"**** Fim da simulacao ****\n");
+                    printf("**** Fim da simulacao ****\n");
+                    fimdasimulacao = true;
+                    fclose(output_logs);
+                }
             }
         }
     }
@@ -174,17 +177,20 @@ void lerConfiguracao()
 
     fclose(configuracao_simulacao);
 }
+
+
 int main(int argc, char const * argv[])
 {
     lerConfiguracao();
     // Interface com o utilizador
     printf("Escolha uma das opcoes: \n");
     printf("1. Iniciar Simulacao \n");
+    printf("2. Limpar ficheiro output \n");
     int opcao = 0; // guarda a opcao selecionada pelo utilizador
     while (!fimdasimulacao)
     {
 
-        while (opcao != 1)
+        while (opcao != 1 && opcao != 2)
         {
             printf("Selecione uma das opcoes: \n");
             scanf("%d", &opcao); // guarda a opcao selecionada
@@ -195,6 +201,13 @@ int main(int argc, char const * argv[])
             //fim_simulacao = iniciaSimulador();
             iniciaSimulador();
             printf("Opcao escolhida = %d\n", opcao);
+            opcao = 0;
+        }
+        else if(opcao == 2){
+            fclose(fopen("output_logs.txt", "w"));
+            printf("Opcao escolhida = %d\n", opcao);
+            printf("Ficheiro limpo\n");
+            opcao = 0;
         }
     }
     return 0;
