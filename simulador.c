@@ -26,6 +26,7 @@ pthread_t tarefasPessoas[100];
 int numZonasNaDiscoteca = 0;
 int numPessoasCriar = 0;
 int lotacaoMax[5];
+int probDesistencia = 0;
 
 //Variaveis monitor:
 int nPessoasZona1 = 0;
@@ -122,6 +123,11 @@ void lerConfiguracao()
 
                 lotacaoMax[4] = valor;
             }
+
+            if(strcmp(parametro, "probDesistencia") == 0) {
+
+                probDesistencia = valor;
+            }
         }
     } else {
         printf("Failure opening file. Try again! \n");
@@ -183,26 +189,41 @@ void * discoteca(void *apontador){//Recebe como argumento o número da zona em q
 	struct Discoteca *zonaDiscoteca=&(zonaGlobal[*numZona]);//zonaDiscoteca é um array em que cada posição é o endereço do array zonaGlobal na posição indicada por *numZona
 }
 
+int desistencia() {
+
+	int random = rand()%100 + 1;
+
+	if (random < probDesistencia) {
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
+
 void * pessoa (void *null){
     struct Pessoa p = criaPessoa();
     int next;
     bool saiu = false;
     int tamanho;
     int posicao;
-    if(p.zonaDiscoteca == 1){
+    int desiste;
+    int estado;
+    if(p.zonaDiscoteca == 1){ //ENTRADA
+        estado = p.zonaDiscoteca+1;
         sem_wait(&semaforo_filaZona1);//Podem estar até 50 pessoas na fila com prioridade
-        printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+        printf("Pessoa %d do sexo %s esta a espera na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
         pthread_mutex_lock(&trincoPessoa);
         nPessoasZona1++;
-        enviarInformacao(sockfd,p.zonaDiscoteca+1,nPessoasZona1,0,0,0,0,0);
+        enviarInformacao(sockfd,estado,nPessoasZona1,0,0,0,0,0);
         pthread_mutex_unlock(&trincoPessoa);
-        sleep(4);
 
         //mudança de fila para outra zona
         tamanho = sizeof(p.historico)/sizeof(p.historico[0]);
         posicao = rand()%tamanho;
         next = p.historico[posicao];
         printf("Pessoa %d do sexo %s saiu da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+        sem_post(&semaforo_filaZona1);
         pthread_mutex_lock(&trincoPessoa);
         for(int i=posicao-1; i<tamanho-1; i++){
             p.historico[i] = p.historico[i + 1];
@@ -212,62 +233,259 @@ void * pessoa (void *null){
         //fim de mudanca
 
         nPessoasZona1--;
-        enviarInformacao(sockfd,2,nPessoasZona1,0,0,0,0,0);
+        enviarInformacao(sockfd,estado,nPessoasZona1,0,0,0,0,0);
         pthread_mutex_unlock(&trincoPessoa);
-        sem_post(&semaforo_filaZona1);
     }
     while (!saiu){
-        if(p.zonaDiscoteca == 2){
-            sem_wait(&semaforo_filaZona2);//Podem estar até 50 pessoas na fila com prioridade
-            printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
-            pthread_mutex_lock(&trincoPessoa);
-            nPessoasZona2++;
-            enviarInformacao(sockfd,p.zonaDiscoteca+1,0,nPessoasZona2,0,0,0,0);
-            pthread_mutex_unlock(&trincoPessoa);
-            sleep(4);
-
-
-            //colocar verificação antes de ver o array q se o tamanho for 0 pra já nem fazer mudança de zona
+        if(p.zonaDiscoteca == 2){ //PISTA DE  DANCA
+            estado = p.zonaDiscoteca+1;
+            sem_wait(&semaforo_filaZona2);//Podem estar até 20 pessoas na fila
+            printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+            if(nPessoasZona2 == lotacaoMax[p.zonaDiscoteca-2]){														//significa que não há lugares livres aó faz sentido definir uma desistência
+				desiste = desistencia();
+                if(desiste){
+                    //sleep(5);
+                    sem_post(&semaforo_filaZona2);
+                    printf("Pessoa %d do sexo %s desistiu da fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                    if (tamanho > 0){
+                        posicao = rand()%tamanho;
+                        next = p.historico[posicao];
+                        pthread_mutex_lock(&trincoPessoa);
+                        for(int i=posicao-1; i<tamanho-1; i++){
+                            p.historico[i] = p.historico[i + 1];
+                        }
+                        tamanho--;
+                        p.zonaDiscoteca = next;
+                        pthread_mutex_unlock(&trincoPessoa);
+                    }
+                }
+            }
+            else{
+                sem_post(&semaforo_filaZona2);
+                printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona2++;
+                enviarInformacao(sockfd,estado,0,nPessoasZona2,0,0,0,0);
+                pthread_mutex_unlock(&trincoPessoa);
+                sleep(20);
+                //mudar de zona
+                if (tamanho > 0){
+                    posicao = rand()%tamanho;
+                    next = p.historico[posicao];
+                    pthread_mutex_lock(&trincoPessoa);
+                    for(int i=posicao-1; i<tamanho-1; i++){
+                        p.historico[i] = p.historico[i + 1];
+                    }
+                    tamanho--;
+                    p.zonaDiscoteca = next;
+                    pthread_mutex_unlock(&trincoPessoa);
+                }
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona2--;
+                enviarInformacao(sockfd,estado,0,nPessoasZona2,0,0,0,0);
+                pthread_mutex_unlock(&trincoPessoa);
+            }
         }
-        if(p.zonaDiscoteca == 3){
-            sem_wait(&semaforo_filaZona3);//Podem estar até 50 pessoas na fila com prioridade
-            printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
-            pthread_mutex_lock(&trincoPessoa);
-            nPessoasZona3++;
-            enviarInformacao(sockfd,p.zonaDiscoteca+1,0,0,nPessoasZona3,0,0,0);
-            pthread_mutex_unlock(&trincoPessoa);
-            sleep(4);
+        if(p.zonaDiscoteca == 3){ // PISTA MINIGOLF
+            estado = p.zonaDiscoteca+1;
+            sem_wait(&semaforo_filaZona3);//Podem estar até 15 pessoas na fila
+            printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+            if(nPessoasZona3 == lotacaoMax[p.zonaDiscoteca-2]){
+				desiste = desistencia();
+                if(desiste){
+                    //sleep(5);
+                    sem_post(&semaforo_filaZona3);
+                    printf("Pessoa %d do sexo %s desistiu da fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                    if (tamanho > 0){
+                        posicao = rand()%tamanho;
+                        next = p.historico[posicao];
+                        pthread_mutex_lock(&trincoPessoa);
+                        for(int i=posicao-1; i<tamanho-1; i++){
+                            p.historico[i] = p.historico[i + 1];
+                        }
+                        tamanho--;
+                        p.zonaDiscoteca = next;
+                        pthread_mutex_unlock(&trincoPessoa);
+                    }
+                }
+            }
+            else{
+                sem_post(&semaforo_filaZona3);
+                printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona3++;
+                enviarInformacao(sockfd,estado,0,0,nPessoasZona3,0,0,0);
+                pthread_mutex_unlock(&trincoPessoa);
+                sleep(15);
+                //mudar de zona
+                if (tamanho > 0){
+                    posicao = rand()%tamanho;
+                    next = p.historico[posicao];
+                    pthread_mutex_lock(&trincoPessoa);
+                    for(int i=posicao-1; i<tamanho-1; i++){
+                        p.historico[i] = p.historico[i + 1];
+                    }
+                    tamanho--;
+                    p.zonaDiscoteca = next;
+                    pthread_mutex_unlock(&trincoPessoa);
+                }
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona3--;
+                enviarInformacao(sockfd,estado,0,0,nPessoasZona3,0,0,0);
+                pthread_mutex_unlock(&trincoPessoa);
+            }
         }
-        if(p.zonaDiscoteca == 4){
-            sem_wait(&semaforo_filaZona4);//Podem estar até 50 pessoas na fila com prioridade
-            printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
-            pthread_mutex_lock(&trincoPessoa);
-            nPessoasZona4++;
-            enviarInformacao(sockfd,p.zonaDiscoteca+1,0,0,0,nPessoasZona4,0,0);
-            pthread_mutex_unlock(&trincoPessoa);
-            sleep(4);
+        if(p.zonaDiscoteca == 4){//WC
+            estado = p.zonaDiscoteca+1;
+            sem_wait(&semaforo_filaZona4);//Podem estar até 5 pessoas na fila
+            printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+            if(nPessoasZona4 == lotacaoMax[p.zonaDiscoteca-2]){
+				desiste = desistencia();
+                if(desiste){
+                    //sleep(5);
+                    sem_post(&semaforo_filaZona4);
+                    printf("Pessoa %d do sexo %s desistiu da fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                    if (tamanho > 0){
+                        posicao = rand()%tamanho;
+                        next = p.historico[posicao];
+                        pthread_mutex_lock(&trincoPessoa);
+                        for(int i=posicao-1; i<tamanho-1; i++){
+                            p.historico[i] = p.historico[i + 1];
+                        }
+                        tamanho--;
+                        p.zonaDiscoteca = next;
+                        pthread_mutex_unlock(&trincoPessoa);
+                    }
+                }
+            }
+            else{
+                sem_post(&semaforo_filaZona4);
+                printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona4++;
+                enviarInformacao(sockfd,estado,0,0,0,nPessoasZona4,0,0);
+                pthread_mutex_unlock(&trincoPessoa);
+                sleep(2);
+                //mudar de zona
+                if (tamanho > 0){
+                    posicao = rand()%tamanho;
+                    next = p.historico[posicao];
+                    pthread_mutex_lock(&trincoPessoa);
+                    for(int i=posicao-1; i<tamanho-1; i++){
+                        p.historico[i] = p.historico[i + 1];
+                    }
+                    tamanho--;
+                    p.zonaDiscoteca = next;
+                    pthread_mutex_unlock(&trincoPessoa);
+                }
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona4--;
+                enviarInformacao(sockfd,estado,0,0,0,nPessoasZona4,0,0);
+                pthread_mutex_unlock(&trincoPessoa);
+            }
         }
-        if(p.zonaDiscoteca == 5){
-            sem_wait(&semaforo_filaZona5);//Podem estar até 50 pessoas na fila com prioridade
-            printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
-            pthread_mutex_lock(&trincoPessoa);
-            nPessoasZona5++;
-            enviarInformacao(sockfd,p.zonaDiscoteca+1,0,0,0,0,nPessoasZona5,0);
-            pthread_mutex_unlock(&trincoPessoa);
-            sleep(4);
+        if(p.zonaDiscoteca == 5){ //SNOOKER
+            estado = p.zonaDiscoteca+1;
+            sem_wait(&semaforo_filaZona5);//Podem estar até 5 pessoas na fila
+            printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+            if(nPessoasZona5 == lotacaoMax[p.zonaDiscoteca-2]){
+				desiste = desistencia();
+                if(desiste){
+                    //sleep(5);
+                    sem_post(&semaforo_filaZona5);
+                    printf("Pessoa %d do sexo %s desistiu da fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                    if (tamanho > 0){
+                        posicao = rand()%tamanho;
+                        next = p.historico[posicao];
+                        pthread_mutex_lock(&trincoPessoa);
+                        for(int i=posicao-1; i<tamanho-1; i++){
+                            p.historico[i] = p.historico[i + 1];
+                        }
+                        tamanho--;
+                        p.zonaDiscoteca = next;
+                        pthread_mutex_unlock(&trincoPessoa);
+                    }
+                }
+            }
+            else{
+                sem_post(&semaforo_filaZona5);
+                printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona5++;
+                enviarInformacao(sockfd,estado,0,0,0,0,nPessoasZona5,0);
+                pthread_mutex_unlock(&trincoPessoa);
+                sleep(10);
+                //mudar de zona
+                if (tamanho > 0){
+                    posicao = rand()%tamanho;
+                    next = p.historico[posicao];
+                    pthread_mutex_lock(&trincoPessoa);
+                    for(int i=posicao-1; i<tamanho-1; i++){
+                        p.historico[i] = p.historico[i + 1];
+                    }
+                    tamanho--;
+                    p.zonaDiscoteca = next;
+                    pthread_mutex_unlock(&trincoPessoa);
+                }
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona5--;
+                enviarInformacao(sockfd,estado,0,0,0,0,nPessoasZona5,0);
+                pthread_mutex_unlock(&trincoPessoa);
+            }
         }
-        if(p.zonaDiscoteca == 6){
-            sem_wait(&semaforo_filaZona6);//Podem estar até 50 pessoas na fila com prioridade
-            printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
-            pthread_mutex_lock(&trincoPessoa);
-            nPessoasZona6++;
-            enviarInformacao(sockfd,p.zonaDiscoteca+1,0,0,0,0,0,nPessoasZona6);
-            pthread_mutex_unlock(&trincoPessoa);
-            sleep(4);
+        if(p.zonaDiscoteca == 6){ //BAR
+            estado = p.zonaDiscoteca+1;
+            sem_wait(&semaforo_filaZona6);//Podem estar até 5 pessoas na fila
+            printf("Pessoa %d do sexo %s entrou na fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+            if(nPessoasZona6 == lotacaoMax[p.zonaDiscoteca-2]){
+				desiste = desistencia();
+                if(desiste){
+                    //sleep(5);
+                    sem_post(&semaforo_filaZona6);
+                    printf("Pessoa %d do sexo %s desistiu da fila da zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                    if (tamanho > 0){
+                        posicao = rand()%tamanho;
+                        next = p.historico[posicao];
+                        pthread_mutex_lock(&trincoPessoa);
+                        for(int i=posicao-1; i<tamanho-1; i++){
+                            p.historico[i] = p.historico[i + 1];
+                        }
+                        tamanho--;
+                        p.zonaDiscoteca = next;
+                        pthread_mutex_unlock(&trincoPessoa);
+                    }
+                }
+            }
+            else{
+                sem_post(&semaforo_filaZona6);
+                printf("Pessoa %d do sexo %s entrou na zona %d \n", p.id, p.sexo, p.zonaDiscoteca);
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona6++;
+                enviarInformacao(sockfd,estado,0,0,0,0,0,nPessoasZona6);
+                pthread_mutex_unlock(&trincoPessoa);
+                sleep(10);
+                //mudar de zona
+                if (tamanho > 0){
+                    posicao = rand()%tamanho;
+                    next = p.historico[posicao];
+                    pthread_mutex_lock(&trincoPessoa);
+                    for(int i=posicao-1; i<tamanho-1; i++){
+                        p.historico[i] = p.historico[i + 1];
+                    }
+                    tamanho--;
+                    p.zonaDiscoteca = next;
+                    pthread_mutex_unlock(&trincoPessoa);
+                }
+                pthread_mutex_lock(&trincoPessoa);
+                nPessoasZona6--;
+                enviarInformacao(sockfd,estado,0,0,0,0,0,nPessoasZona6);
+                pthread_mutex_unlock(&trincoPessoa);
+            }
         }
         if (tamanho == 0){
             saiu = true;
             printf("Pessoa %d do sexo %s saiu da discoteca \n", p.id, p.sexo);
+            pthread_exit(NULL);
         }
     }
 }
@@ -275,9 +493,9 @@ void definirValores(){
 
     sem_init(&semaforo_enviarInformacao,0,1);
     sem_init(&semaforo_filaZona1,0,25);//Entrada, com prioridade a mulheres
-	sem_init(&semaforo_filaZona2,0,30);//pista danca
+	sem_init(&semaforo_filaZona2,0,20);//pista danca
     sem_init(&semaforo_filaZona3,0,15);//mini-golfe
-    sem_init(&semaforo_filaZona4,0,10);//wc
+    sem_init(&semaforo_filaZona4,0,5);//wc
     sem_init(&semaforo_filaZona5,0,15);//snooker
     sem_init(&semaforo_filaZona6,0,20);//Bar, com prioridade a mulheres
 

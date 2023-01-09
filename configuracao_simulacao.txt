@@ -5,3 +5,4 @@ lotacaoMaxZona3 : 10
 lotacaoMaxZona4 : 1
 lotacaoMaxZona5 : 20
 lotacaoMaxZona6 : 30
+probDesistencia : 10
