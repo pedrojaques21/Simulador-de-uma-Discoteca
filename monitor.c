@@ -1,77 +1,79 @@
 #include "header.h"
 
-//variaveis de ficheiro
-int lotacaoMax[5];
+//variaveis
+bool fimdasimulacao = false;
 
 void escreverOutput(int newsockfd){
 
-	int mensagem = 0;
+    int mensagem = 0;
     int estado = 0;
-	int numPessoasZona1 = 0;
+    int numPessoasZona1 = 0;
     int numPessoasZona2 = 0;
     int numPessoasZona3 = 0;
     int numPessoasZona4 = 0;
     int numPessoasZona5 = 0;
-    int numPessoasZona6 = 0;											
+    int numPessoasZona6 = 0;
 
-	/*FILE* output_logs = fopen("output_logs.txt", "a");//a acrescenta mensagem ao ficheiro
+    FILE* output_logs = fopen("output_logs.txt", "a");//a acrescenta mensagem ao ficheiro
 
-	if(output_logs == NULL){
-		printf("Erro, ficheiro não criado");
-	}
-	else{*/
-		while(estado!=20){
-			char linhaRecebe[MAXLINE+1];
-			mensagem=recv(newsockfd,linhaRecebe,MAXLINE,0);
+    if(output_logs == NULL){
+        printf("Erro, ficheiro nao criado");
+    }
+    else{
+        while(estado!=20){
+            char linhaRecebe[MAXLINE+1];
+            mensagem=recv(newsockfd,linhaRecebe,MAXLINE,0);
 
-			sscanf(linhaRecebe,"%d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6);
-			
-			switch(estado){
-				case 1:{
-					//fprintf(output_logs,"**** Simulacao - Discoteca ****\n");
-					printf("**** Simulacao - Discoteca ****\n");
-					break;
-				}
-				case 2:{
-					//fprintf(output_logs, "Pessoas na Entrada: %d\n" ,numPessoasZona1);
-					printf("Pessoas na Entrada: %d\n" ,numPessoasZona1);
-					break;
-				}
-				case 3:{
-					//fprintf(output_logs,"Pessoas na Pista de Dança: %d/%d\n" ,numPessoasZona2);
-					printf("Pessoas na Pista de Dança: %d/%d\n" ,numPessoasZona2, lotacaoMax[estado-3]);
-					break;
-				}
-				case 4:{
-					//fprintf(output_logs, "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3);
-					printf( "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3, lotacaoMax[estado-3]);
-					break;
-				}
-				case 5:{
-                    //fprintf(output_logs, "WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
-					printf("WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
-					break;
-				}
+            sscanf(linhaRecebe,"%d %d %d %d %d %d %d",&estado,&numPessoasZona1,&numPessoasZona2,&numPessoasZona3,&numPessoasZona4,&numPessoasZona5,&numPessoasZona6);
+
+            switch(estado){
+                case 1:{
+                    fprintf(output_logs,"**** Simulacao - Discoteca ****\n");
+                    printf("**** Simulacao - Discoteca ****\n");
+                    break;
+                }
+                case 2:{
+                    fprintf(output_logs, "Pessoas na Entrada: %d\n" ,numPessoasZona1);
+                    printf("Pessoas na Entrada: %d\n" ,numPessoasZona1);
+                    break;
+                }
+                case 3:{
+                    fprintf(output_logs,"Pessoas na Pista de Danca: %d/%d\n" ,numPessoasZona2,  lotacoes[estado-2]);
+                    printf("Pessoas na Pista de Danca: %d/%d\n" ,numPessoasZona2, lotacoes[estado-2]);
+                    break;
+                }
+                case 4:{
+                    fprintf(output_logs, "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3, lotacoes[estado-2]);
+                    printf( "Pessoas na Pista de Mini-golf: %d/%d\n",numPessoasZona3, lotacoes[estado-2]);
+                    break;
+                }
+                case 5:{
+                    fprintf(output_logs, "WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
+                    fprintf(output_logs, "WC: %d/%d\n", numPessoasZona4, lotacoes[estado-2]);
+                    printf("WC: %s\n", numPessoasZona4 ? "Ocupada" : "Vazia");
+                    printf( "WC: %d/%d\n", numPessoasZona4, lotacoes[estado-2]);
+                    break;
+                }
                 case 6:{
-                    //fprintf(output_logs, "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5);
-					printf( "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5, lotacaoMax[estado-3]);	
-					break;
+                    fprintf(output_logs, "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5, lotacoes[estado-2]);
+                    printf( "Pessoas na Sala de Snooker: %d/%d\n",numPessoasZona5, lotacoes[estado-2]);
+                    break;
                 }
                 case 7:{
-                    //fprintf(output_logs, "Pessoas no Bar: %d/%d\n",numPessoasZona6);
-					printf( "Pessoas no Bar: %d/%d\n",numPessoasZona6, lotacaoMax[estado-3]);
-					break;
+                    fprintf(output_logs, "Pessoas no Bar: %d/%d\n",numPessoasZona6, lotacoes[estado-2]);
+                    printf( "Pessoas no Bar: %d/%d\n",numPessoasZona6, lotacoes[estado-2]);
+                    break;
                 }
-			}
-		}
-	//}
-	if(estado==20){
-		//fprintf(output_logs,"**** Fim da simulacao ****\n");
-		printf("**** Fim da simulacao ****\n");
-		//fclose(output_logs);
-	}
+                case 20:{
+                    fprintf(output_logs,"**** Fim da simulacao ****\n");
+                    printf("**** Fim da simulacao ****\n");
+                    fimdasimulacao = true;
+                    fclose(output_logs);
+                }
+            }
+        }
+    }
 }
-
 
 void iniciaSimulador()//bool
 {
@@ -128,64 +130,18 @@ void iniciaSimulador()//bool
     //return fim_simulacao;
 }
 
-void lerConfiguracao()
-{
-    FILE* configuracao_simulacao;
 
-    configuracao_simulacao = fopen("configuracao_simulacao.txt", "r");
-
-    if(configuracao_simulacao != NULL){
-
-        char linha[50],
-            parametro[50];
-        int valor;
-
-        while(fgets(linha, sizeof(linha), configuracao_simulacao) != NULL){
-
-            sscanf(linha, "%s : %d", parametro , &valor);
-
-            if(strcmp(parametro, "lotacaoMaxZona2") == 0) {
-                lotacaoMax[0] = valor;
-            }
-
-            if(strcmp(parametro, "lotacaoMaxZona3") == 0) {
-
-                lotacaoMax[1] = valor;
-            }
-
-            if(strcmp(parametro, "lotacaoMaxZona4") == 0) {
-
-                lotacaoMax[2] = valor;
-            }
-
-            if(strcmp(parametro, "lotacaoMaxZona5") == 0) {
-
-                lotacaoMax[3] = valor;
-            }
-
-            if(strcmp(parametro, "lotacaoMaxZona6") == 0) {
-
-                lotacaoMax[4] = valor;
-            }
-        }
-    } else {
-        printf("Failure opening file. Try again! \n");
-    }
-
-    fclose(configuracao_simulacao);
-}
 int main(int argc, char const * argv[])
-{   
-    lerConfiguracao();
+{
     // Interface com o utilizador
     printf("Escolha uma das opcoes: \n");
     printf("1. Iniciar Simulacao \n");
+    printf("2. Limpar ficheiro output \n");
     int opcao = 0; // guarda a opcao selecionada pelo utilizador
-    bool fim_simulacao = false;
-    while (!fim_simulacao)
+    while (!fimdasimulacao)
     {
 
-        while (opcao != 1)
+        while (opcao != 1 && opcao != 2)
         {
             printf("Selecione uma das opcoes: \n");
             scanf("%d", &opcao); // guarda a opcao selecionada
@@ -196,6 +152,13 @@ int main(int argc, char const * argv[])
             //fim_simulacao = iniciaSimulador();
             iniciaSimulador();
             printf("Opcao escolhida = %d\n", opcao);
+            opcao = 0;
+        }
+        else if(opcao == 2){
+            fclose(fopen("output_logs.txt", "w"));
+            printf("Opcao escolhida = %d\n", opcao);
+            printf("Ficheiro limpo\n");
+            opcao = 0;
         }
     }
     return 0;
